@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pokédex</title>
+  <link rel="stylesheet" href="pokedex.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f00;
+      font-family: sans-serif;
+    }
+
+    #pokemonCards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px;
+    }
+
+    .pokemon-card {
+      width: 72px;
+      text-align: center;
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 5px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: transform 0.2s;
+    }
+
+    .pokemon-card:hover {
+      transform: scale(1.05);
+      background-color: #ffe;
+    }
+
+    .pokemon-card img {
+      width: 64px;
+      height: 64px;
+    }
+
+    #searchInput {
+      width: calc(100% - 20px);
+      padding: 8px;
+      margin: 10px;
+      border-radius: 5px;
+      border: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="pokedex" style="display: flex; flex-wrap: wrap;">
+    
+    <div style="width: 500px; position: absolute; left: 20px; top: 20px; margin-top: 100px;">
+      <input type="text" id="searchInput" placeholder="Buscar Pokémon..." />
+      <div id="pokemonCards" style="margin-left: 20px;"></div>
+    </div>    
+
+    <div id="left">
+      <div id="logo"></div>
+      <div id="bg_curve1_left"></div>
+      <div id="bg_curve2_left"></div>
+      <div id="curve1_left">
+        <div id="buttonGlass">
+          <div id="reflect"></div>
+        </div>
+        <div id="miniButtonGlass1"></div>
+        <div id="miniButtonGlass2"></div>
+        <div id="miniButtonGlass3"></div>
+      </div>
+      <div id="curve2_left">
+        <div id="junction">
+          <div id="junction1"></div>
+          <div id="junction2"></div>
+        </div>
+      </div>
+      <div id="screen">
+        <div id="topPicture">
+          <div id="buttontopPicture1"></div>
+          <div id="buttontopPicture2"></div>
+        </div>
+        <div id="picture">
+          <img id="pokemonImage" title="Click e altere imagem" height="170" />
+        </div>
+        <div id="buttonbottomPicture"></div>
+        <div id="speakers">
+          <div class="sp"></div>
+          <div class="sp"></div>
+          <div class="sp"></div>
+          <div class="sp"></div>
+        </div>
+      </div>
+      <div id="bigbluebutton"></div>
+      <div id="barbutton1"></div>
+      <div id="barbutton2"></div>
+      <div id="cross">
+        <div id="leftcross">
+          <div id="leftT"></div>
+        </div>
+        <div id="topcross">
+          <div id="upT"></div>
+        </div>
+        <div id="rightcross">
+          <div id="rightT"></div>
+        </div>
+        <div id="midcross">
+          <div id="midCircle"></div>
+        </div>
+        <div id="botcross">
+          <div id="downT"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="right">
+      <div id="stats">
+        <strong>Name:</strong> <span id="pokemonName"></span><br />
+        <strong>Type:</strong> <span id="pokemonTypes"></span><br />
+        <strong>Height:</strong> <span id="pokemonHeight"></span> m<br />
+        <strong>Weight:</strong> <span id="pokemonWeight"></span> kg<br />
+        <strong>Skill:</strong> <span id="pokemonSkills"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const pokemonImage = document.getElementById("pokemonImage");
+    const pokemonName = document.getElementById("pokemonName");
+    const pokemonTypes = document.getElementById("pokemonTypes");
+    const pokemonHeight = document.getElementById("pokemonHeight");
+    const pokemonWeight = document.getElementById("pokemonWeight");
+    const pokemonSkills = document.getElementById("pokemonSkills");
+    const pokemonCardsDiv = document.getElementById("pokemonCards");
+    const searchInput = document.getElementById("searchInput");
+
+    function getRandomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    async function fetchPokemon(identifier) {
+      const url = `https://pokeapi.co/api/v2/pokemon/${identifier}`;
+      try {
+        const response = await fetch(url.toLowerCase());
+        if (!response.ok) throw new Error("Pokémon não encontrado.");
+        return await response.json();
+      } catch (err) {
+        alert(err.message);
+        console.error(err);
+        return null;
+      }
+    }
+
+    function updatePokedex(pokemon) {
+      pokemonImage.src = pokemon.sprites.front_default;
+      pokemonName.textContent = pokemon.name.toUpperCase();
+      pokemonTypes.textContent = pokemon.types.map(t => t.type.name).join(", ");
+      pokemonHeight.textContent = (pokemon.height / 10).toFixed(1);
+      pokemonWeight.textContent = (pokemon.weight / 10).toFixed(1);
+      pokemonSkills.textContent = pokemon.abilities.map(a => a.ability.name).join(", ");
+    }
+
+    function createPokemonCard(pokemon) {
+      const card = document.createElement("div");
+      card.classList.add("pokemon-card");
+
+      const img = document.createElement("img");
+      img.src = pokemon.sprites.front_default;
+
+      const name = document.createElement("div");
+      name.textContent = pokemon.name;
+
+      card.appendChild(img);
+      card.appendChild(name);
+
+      card.addEventListener("click", () => {
+        updatePokedex(pokemon);
+      });
+
+      return card;
+    }
+
+    async function loadRandomPokemons() {
+      const maxId = 1010;
+      const usedIds = new Set();
+
+      pokemonCardsDiv.innerHTML = "";
+
+      for (let i = 0; i < 10; i++) {
+        let id;
+        do {
+          id = getRandomInt(1, maxId);
+        } while (usedIds.has(id));
+        usedIds.add(id);
+
+        const pokemon = await fetchPokemon(id);
+        if (pokemon) {
+          const card = createPokemonCard(pokemon);
+          pokemonCardsDiv.appendChild(card);
+          if (i === 0) updatePokedex(pokemon);
+        }
+      }
+    }
+
+    searchInput.addEventListener("keypress", async (e) => {
+      if (e.key === "Enter") {
+        const name = searchInput.value.trim().toLowerCase();
+        if (!name) return;
+        const pokemon = await fetchPokemon(name);
+        if (pokemon) {
+          updatePokedex(pokemon);
+        }
+      }
+    });
+
+    loadRandomPokemons();
+  </script>
+</body>
+
+</html>
